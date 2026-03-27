@@ -146,6 +146,7 @@ async function handleLogin() {
       localStorage.removeItem('pm_token')
       localStorage.removeItem('pm_gist_id')
       localStorage.removeItem('pm_master_password')
+      localStorage.removeItem('pm_password_saved_at')
     }
 
     closeToast()

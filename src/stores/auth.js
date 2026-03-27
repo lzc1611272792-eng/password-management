@@ -27,21 +27,39 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('pm_token')
     localStorage.removeItem('pm_gist_id')
     localStorage.removeItem('pm_master_password')
+    localStorage.removeItem('pm_password_saved_at')
   }
 
   function loadFromStorage() {
     const savedToken = localStorage.getItem('pm_token')
     const savedGistId = localStorage.getItem('pm_gist_id')
     const savedPassword = localStorage.getItem('pm_master_password')
+    const savedAt = localStorage.getItem('pm_password_saved_at')
+
     if (savedToken) token.value = savedToken
     if (savedGistId) gistId.value = savedGistId
-    if (savedPassword) masterPassword.value = savedPassword
+    
+    // 检查主密码有效期 (3天)
+    if (savedPassword && savedAt) {
+      const now = Date.now()
+      const expiry = 3 * 24 * 60 * 60 * 1000 // 3天
+      if (now - parseInt(savedAt) < expiry) {
+        masterPassword.value = savedPassword
+      } else {
+        // 已过期，清理
+        localStorage.removeItem('pm_master_password')
+        localStorage.removeItem('pm_password_saved_at')
+      }
+    }
   }
 
   function saveToStorage() {
     localStorage.setItem('pm_token', token.value)
     localStorage.setItem('pm_gist_id', gistId.value)
-    localStorage.setItem('pm_master_password', masterPassword.value)
+    if (masterPassword.value) {
+      localStorage.setItem('pm_master_password', masterPassword.value)
+      localStorage.setItem('pm_password_saved_at', Date.now().toString())
+    }
   }
 
   return {
@@ -54,6 +72,6 @@ export const useAuthStore = defineStore('auth', () => {
     setGistId,
     logout,
     loadFromStorage,
-    saveTokenToStorage
+    saveToStorage
   }
 })
