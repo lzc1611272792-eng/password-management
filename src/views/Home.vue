@@ -514,7 +514,14 @@ function exportBackup() {
 /* 浮动按钮 */
 :deep(.van-floating-bubble) {
   background: var(--gradient-primary) !important;
-  box-shadow: 0 6px 25px rgba(124, 58, 237, 0.45);
+  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.5), 0 0 15px rgba(167, 139, 250, 0.4);
+}
+
+:deep(.van-floating-bubble__icon) {
+  color: #ffffff !important;
+  font-size: 26px !important;
+  font-weight: bold;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
 
 /* 设置面板 */

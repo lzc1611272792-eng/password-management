@@ -34,8 +34,8 @@
           </van-cell-group>
 
           <div class="remember-row">
-            <van-checkbox v-model="rememberToken" icon-size="16">
-              记住Token
+            <van-checkbox v-model="rememberMe" icon-size="16">
+              记住登录信息
             </van-checkbox>
           </div>
 
@@ -77,7 +77,7 @@ const accountsStore = useAccountsStore()
 
 const token = ref('')
 const password = ref('')
-const rememberToken = ref(false)
+const rememberMe = ref(false)
 const loading = ref(false)
 const isNewUser = ref(false)
 
@@ -85,7 +85,8 @@ onMounted(() => {
   authStore.loadFromStorage()
   if (authStore.token) {
     token.value = authStore.token
-    rememberToken.value = true
+    password.value = authStore.masterPassword || ''
+    rememberMe.value = true
   }
 })
 
@@ -138,8 +139,13 @@ async function handleLogin() {
       accountsStore.setAccounts(initialData)
     }
 
-    if (rememberToken.value) {
-      authStore.saveTokenToStorage()
+    if (rememberMe.value) {
+      authStore.saveToStorage()
+    } else {
+      // 如果不记住，清理掉之前的
+      localStorage.removeItem('pm_token')
+      localStorage.removeItem('pm_gist_id')
+      localStorage.removeItem('pm_master_password')
     }
 
     closeToast()

@@ -26,18 +26,22 @@ export const useAuthStore = defineStore('auth', () => {
     gistId.value = ''
     localStorage.removeItem('pm_token')
     localStorage.removeItem('pm_gist_id')
+    localStorage.removeItem('pm_master_password')
   }
 
   function loadFromStorage() {
     const savedToken = localStorage.getItem('pm_token')
     const savedGistId = localStorage.getItem('pm_gist_id')
+    const savedPassword = localStorage.getItem('pm_master_password')
     if (savedToken) token.value = savedToken
     if (savedGistId) gistId.value = savedGistId
+    if (savedPassword) masterPassword.value = savedPassword
   }
 
-  function saveTokenToStorage() {
+  function saveToStorage() {
     localStorage.setItem('pm_token', token.value)
     localStorage.setItem('pm_gist_id', gistId.value)
+    localStorage.setItem('pm_master_password', masterPassword.value)
   }
 
   return {
