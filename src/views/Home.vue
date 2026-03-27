@@ -79,17 +79,8 @@
       </div>
     </div>
 
-    <div class="fab-wrapper" @click="goAdd">
-      <div class="fab-pulse"></div>
-      <van-floating-bubble
-        axis="xy"
-        magnetic="x"
-        @click="goAdd"
-      >
-        <template #icon>
-          <van-icon name="plus" class="custom-fab-icon" />
-        </template>
-      </van-floating-bubble>
+    <div class="custom-fab" @click="goAdd">
+      <span class="fab-plus">+</span>
     </div>
 
     <van-action-sheet
@@ -514,21 +505,36 @@ function exportBackup() {
   height: 100%;
 }
 
-/* 浮动按钮 */
-:deep(.van-floating-bubble) {
-  background: linear-gradient(135deg, #7c3aed, #4f46e5) !important;
+/* 浮动加号按钮 */
+.custom-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 60px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 999;
   box-shadow: 0 8px 32px rgba(124, 58, 237, 0.6), 0 0 20px rgba(167, 139, 250, 0.4);
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.custom-fab-icon {
-  color: #ffffff !important;
-  font-size: 32px !important;
-  font-weight: 800 !important;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.4);
-  -webkit-text-stroke: 1px rgba(255,255,255,0.1);
+.custom-fab:active {
+  transform: scale(0.92);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+}
+
+.fab-plus {
+  color: #ffffff;
+  font-size: 36px;
+  font-weight: 300;
+  line-height: 1;
+  user-select: none;
+  margin-top: -2px;
 }
 
 /* 设置面板 */
