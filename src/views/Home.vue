@@ -83,10 +83,13 @@
       <div class="fab-pulse"></div>
       <van-floating-bubble
         axis="xy"
-        icon="plus"
         magnetic="x"
         @click="goAdd"
-      />
+      >
+        <template #icon>
+          <van-icon name="plus" class="custom-fab-icon" />
+        </template>
+      </van-floating-bubble>
     </div>
 
     <van-action-sheet
@@ -513,15 +516,19 @@ function exportBackup() {
 
 /* 浮动按钮 */
 :deep(.van-floating-bubble) {
-  background: var(--gradient-primary) !important;
-  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.5), 0 0 15px rgba(167, 139, 250, 0.4);
+  background: linear-gradient(135deg, #7c3aed, #4f46e5) !important;
+  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.6), 0 0 20px rgba(167, 139, 250, 0.4);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-:deep(.van-floating-bubble__icon) {
+.custom-fab-icon {
   color: #ffffff !important;
-  font-size: 26px !important;
-  font-weight: bold;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  font-size: 32px !important;
+  font-weight: 800 !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  -webkit-text-stroke: 1px rgba(255,255,255,0.1);
 }
 
 /* 设置面板 */
