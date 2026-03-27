@@ -1,10 +1,12 @@
 <template>
   <div class="home-page">
-    <van-nav-bar title="密码管理器" fixed>
-      <template #right>
-        <van-icon name="setting-o" size="20" @click="showSettings = true" />
-      </template>
-    </van-nav-bar>
+    <div class="nav-glass">
+      <van-nav-bar title="密码管理器" fixed>
+        <template #right>
+          <van-icon name="setting-o" size="20" @click="showSettings = true" />
+        </template>
+      </van-nav-bar>
+    </div>
 
     <div class="content">
       <van-search
@@ -29,9 +31,10 @@
 
       <div class="account-list">
         <van-swipe-cell
-          v-for="account in accountsStore.filteredAccounts"
+          v-for="(account, index) in accountsStore.filteredAccounts"
           :key="account.id"
           class="account-card"
+          :style="{ animationDelay: index * 0.06 + 's' }"
         >
           <div class="card-content" @click="goEdit(account.id)">
             <div class="card-header">
@@ -40,34 +43,21 @@
                 <div class="card-name">{{ account.name }}</div>
                 <div class="card-username">{{ maskUsername(account.username) }}</div>
               </div>
-              <van-icon name="arrow" color="rgba(255,255,255,0.3)" />
+              <van-icon name="arrow" color="rgba(255,255,255,0.2)" />
             </div>
             <div class="card-actions">
-              <van-button
-                size="small"
-                type="primary"
-                plain
-                @click.stop="copyText(account.username, '用户名')"
-              >
-                用户名
-              </van-button>
-              <van-button
-                size="small"
-                type="primary"
-                plain
-                @click.stop="copyText(account.password, '密码')"
-              >
-                密码
-              </van-button>
-              <van-button
-                v-if="account.url"
-                size="small"
-                type="primary"
-                plain
-                @click.stop="openUrl(account.url)"
-              >
-                访问
-              </van-button>
+              <button class="action-chip" @click.stop="copyText(account.username, '用户名')">
+                <span class="chip-icon">👤</span>
+                <span>复制用户名</span>
+              </button>
+              <button class="action-chip" @click.stop="copyText(account.password, '密码')">
+                <span class="chip-icon">🔑</span>
+                <span>复制密码</span>
+              </button>
+              <button v-if="account.url" class="action-chip" @click.stop="openUrl(account.url)">
+                <span class="chip-icon">🔗</span>
+                <span>访问</span>
+              </button>
             </div>
           </div>
           <template #right>
@@ -89,12 +79,15 @@
       </div>
     </div>
 
-    <van-floating-bubble
-      axis="xy"
-      icon="plus"
-      magnetic="x"
-      @click="goAdd"
-    />
+    <div class="fab-wrapper" @click="goAdd">
+      <div class="fab-pulse"></div>
+      <van-floating-bubble
+        axis="xy"
+        icon="plus"
+        magnetic="x"
+        @click="goAdd"
+      />
+    </div>
 
     <van-action-sheet
       v-model:show="showSettings"
@@ -125,7 +118,7 @@ const showSettings = ref(false)
 
 const settingsActions = [
   { name: '导出备份文件', value: 'export' },
-  { name: '退出登录', value: 'logout', color: '#ee0a24' }
+  { name: '退出登录', value: 'logout', color: '#f87171' }
 ]
 
 onMounted(() => {
@@ -240,37 +233,63 @@ function exportBackup() {
 <style scoped>
 .home-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #0a0a1a 0%, #1a1a3a 100%);
   padding-top: 46px;
   padding-bottom: 80px;
+  position: relative;
+  z-index: 1;
 }
 
+/* 导航栏毒砂玻璃 */
 .home-page :deep(.van-nav-bar) {
-  background: rgba(10, 10, 26, 0.9);
-  backdrop-filter: blur(10px);
+  background: rgba(9, 9, 11, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .home-page :deep(.van-nav-bar__title) {
-  color: #fff;
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.home-page :deep(.van-nav-bar .van-icon) {
+  color: var(--text-secondary);
+  transition: var(--transition-fast);
+}
+
+.home-page :deep(.van-nav-bar .van-icon:active) {
+  color: var(--primary);
 }
 
 .content {
   padding: 0 12px;
 }
 
+/* 搜索栏 */
 .van-search :deep(.van-search__content) {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(0, 212, 255, 0.2);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  transition: var(--transition-normal);
+}
+
+.van-search :deep(.van-search__content:focus-within) {
+  border-color: var(--border-glow);
+  box-shadow: var(--shadow-glow-sm);
 }
 
 .van-search :deep(.van-field__control) {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .van-search :deep(.van-field__control::placeholder) {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
 }
 
+/* 分类标签 */
 .category-tabs {
   margin: 12px 0;
 }
@@ -280,35 +299,65 @@ function exportBackup() {
 }
 
 .category-tabs :deep(.van-tab) {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  transition: var(--transition-fast);
 }
 
 .category-tabs :deep(.van-tab--active) {
-  color: #00d4ff;
+  color: var(--primary-light);
 }
 
 .category-tabs :deep(.van-tabs__line) {
-  background: #00d4ff;
+  background: var(--gradient-primary);
+  height: 3px;
+  border-radius: 2px;
+  bottom: 0;
 }
 
+/* 账号列表 */
 .account-card {
   margin-bottom: 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   overflow: hidden;
+  animation: fadeInUp 0.5s ease-out both;
 }
 
 .card-content {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(0, 212, 255, 0.15);
-  border-radius: 12px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
   padding: 16px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
 }
 
-.card-content:hover {
-  border-color: rgba(0, 212, 255, 0.4);
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
+/* 卡片顶部渐变装饰线 */
+.card-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.3), transparent);
+  opacity: 0;
+  transition: var(--transition-normal);
+}
+
+.card-content:active {
+  transform: scale(0.98);
+  border-color: var(--border-glow);
+  box-shadow: var(--shadow-glow-sm);
+}
+
+.card-content:active::before {
+  opacity: 1;
 }
 
 .card-header {
@@ -318,74 +367,115 @@ function exportBackup() {
 }
 
 .card-icon {
-  width: 44px;
-  height: 44px;
-  background: rgba(0, 212, 255, 0.1);
-  border-radius: 10px;
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.15), rgba(124, 58, 237, 0.08));
+  border: 1px solid rgba(167, 139, 250, 0.15);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 22px;
+  flex-shrink: 0;
 }
 
 .card-info {
   flex: 1;
+  min-width: 0;
 }
 
 .card-name {
-  color: #fff;
-  font-size: 16px;
-  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .card-username {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 13px;
+  color: var(--text-muted);
+  font-size: 12px;
   margin-top: 4px;
+  font-family: 'Inter', monospace;
 }
 
+/* 快捷操作按钮 */
 .card-actions {
   display: flex;
   gap: 8px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--border-subtle);
 }
 
-.card-actions :deep(.van-button) {
+.action-chip {
   flex: 1;
-  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 34px;
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: var(--radius-sm);
+  background: rgba(167, 139, 250, 0.06);
+  color: var(--primary-light);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  font-family: inherit;
+  padding: 0 6px;
+}
+
+.action-chip:active {
+  background: rgba(167, 139, 250, 0.2);
+  border-color: var(--border-glow);
+  transform: scale(0.95);
+}
+
+.chip-icon {
   font-size: 12px;
-  border-color: rgba(0, 212, 255, 0.4);
-  color: #00d4ff;
-  background: rgba(0, 212, 255, 0.1);
 }
 
 .delete-btn {
   height: 100%;
 }
 
+/* 浮动按钮 */
 :deep(.van-floating-bubble) {
-  background: linear-gradient(135deg, #00d4ff, #0099cc);
-  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+  background: var(--gradient-primary) !important;
+  box-shadow: 0 6px 25px rgba(124, 58, 237, 0.45);
 }
 
+/* 设置面板 */
 :deep(.van-action-sheet) {
-  background: #1a1a3a;
+  background: rgba(20, 20, 30, 0.95);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
 }
 
 :deep(.van-action-sheet__item) {
-  color: #fff;
+  color: var(--text-primary);
   background: transparent;
+  font-weight: 500;
 }
 
 :deep(.van-action-sheet__cancel) {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   background: transparent;
 }
 
 :deep(.van-action-sheet__header) {
-  color: #fff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  font-weight: 600;
+}
+
+:deep(.van-action-sheet__gap) {
+  background: var(--border-subtle);
+}
+
+/* 空状态 */
+:deep(.van-empty__description) {
+  color: var(--text-muted);
 }
 </style>

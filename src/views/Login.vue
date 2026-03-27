@@ -1,49 +1,58 @@
 <template>
   <div class="login-page">
+    <!-- 装饰光球 -->
+    <div class="login-orbs">
+      <div class="login-orb login-orb-1"></div>
+      <div class="login-orb login-orb-2"></div>
+    </div>
+
     <div class="login-container">
-      <div class="logo">
+      <div class="logo" >
+        <div class="logo-glow"></div>
         <div class="logo-icon">🔐</div>
         <h1>密码管理器</h1>
         <p class="subtitle">安全存储 · 随时访问</p>
       </div>
 
-      <van-form @submit="handleLogin" class="login-form">
-        <van-cell-group inset>
-          <van-field
-            v-model="token"
-            type="password"
-            label="Token"
-            placeholder="GitHub Personal Access Token"
-            :rules="[{ required: true, message: '请输入Token' }]"
-          />
-          <van-field
-            v-model="password"
-            type="password"
-            label="主密码"
-            placeholder="输入主密码"
-            :rules="[{ required: true, message: '请输入主密码' }]"
-          />
-        </van-cell-group>
+      <div class="form-card glass">
+        <van-form @submit="handleLogin" class="login-form">
+          <van-cell-group inset>
+            <van-field
+              v-model="token"
+              type="password"
+              label="Token"
+              placeholder="GitHub Personal Access Token"
+              :rules="[{ required: true, message: '请输入Token' }]"
+            />
+            <van-field
+              v-model="password"
+              type="password"
+              label="主密码"
+              placeholder="输入主密码"
+              :rules="[{ required: true, message: '请输入主密码' }]"
+            />
+          </van-cell-group>
 
-        <div class="remember-row">
-          <van-checkbox v-model="rememberToken" icon-size="16">
-            记住Token
-          </van-checkbox>
-        </div>
+          <div class="remember-row">
+            <van-checkbox v-model="rememberToken" icon-size="16">
+              记住Token
+            </van-checkbox>
+          </div>
 
-        <div class="submit-btn">
-          <van-button
-            round
-            block
-            type="primary"
-            native-type="submit"
-            :loading="loading"
-            loading-text="验证中..."
-          >
-            {{ isNewUser ? '创建存储并登录' : '解锁' }}
-          </van-button>
-        </div>
-      </van-form>
+          <div class="submit-btn">
+            <van-button
+              round
+              block
+              type="primary"
+              native-type="submit"
+              :loading="loading"
+              loading-text="验证中..."
+            >
+              {{ isNewUser ? '创建存储并登录' : '解锁' }}
+            </van-button>
+          </div>
+        </van-form>
+      </div>
 
       <div class="tips">
         <p>首次使用将自动创建私有Gist存储数据</p>
@@ -155,77 +164,168 @@ async function handleLogin() {
 <style scoped>
 .login-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a0a2a 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* 登录页专属装饰光球 */
+.login-orbs {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+}
+
+.login-orb-1 {
+  width: 350px;
+  height: 350px;
+  background: rgba(124, 58, 237, 0.2);
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: breathe 6s ease-in-out infinite;
+}
+
+.login-orb-2 {
+  width: 200px;
+  height: 200px;
+  background: rgba(245, 158, 11, 0.1);
+  bottom: 15%;
+  right: 10%;
+  animation: breathe 8s ease-in-out infinite 2s;
 }
 
 .login-container {
   width: 100%;
   max-width: 400px;
-  padding: 40px 20px;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.8s ease-out;
 }
 
+/* Logo 区域 */
 .logo {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 36px;
+  position: relative;
+}
+
+.logo-glow {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.35) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(20px);
+  animation: breathe 4s ease-in-out infinite;
 }
 
 .logo-icon {
   font-size: 64px;
   margin-bottom: 16px;
-  filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.5));
+  position: relative;
+  z-index: 1;
+  animation: float 5s ease-in-out infinite;
+  filter: drop-shadow(0 0 25px rgba(167, 139, 250, 0.5));
 }
 
 .logo h1 {
-  color: #fff;
+  color: var(--text-primary);
   font-size: 28px;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
+  background: linear-gradient(135deg, #fff 30%, var(--primary-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .subtitle {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   font-size: 14px;
   margin-top: 8px;
+  font-weight: 300;
+  letter-spacing: 4px;
+}
+
+/* 表单卡片 */
+.form-card {
+  border-radius: var(--radius-lg);
+  padding: 24px 4px;
+  box-shadow: var(--shadow-card), var(--shadow-glow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 卡片顶部渐变装饰线 */
+.form-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  opacity: 0.6;
 }
 
 .login-form :deep(.van-cell-group--inset) {
   margin: 0;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(0, 212, 255, 0.2);
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
 }
 
 .login-form :deep(.van-cell) {
   background: transparent;
-  color: #fff;
+  color: var(--text-primary);
+  padding: 14px 16px;
+}
+
+.login-form :deep(.van-cell::after) {
+  border-color: var(--border-subtle);
 }
 
 .login-form :deep(.van-field__label) {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
   width: 60px;
+  font-weight: 500;
 }
 
 .login-form :deep(.van-field__control) {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .login-form :deep(.van-field__control::placeholder) {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
 }
 
 .remember-row {
-  margin: 16px 0;
-  padding: 0 16px;
+  margin: 16px 16px 0;
 }
 
 .remember-row :deep(.van-checkbox__label) {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.remember-row :deep(.van-checkbox__icon--checked .van-icon) {
+  background-color: var(--primary);
+  border-color: var(--primary);
 }
 
 .submit-btn {
@@ -234,21 +334,31 @@ async function handleLogin() {
 }
 
 .submit-btn :deep(.van-button--primary) {
-  background: linear-gradient(90deg, #00d4ff, #0099cc);
+  background: var(--gradient-primary);
   border: none;
-  height: 48px;
+  height: 50px;
   font-size: 16px;
-  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+  font-weight: 600;
+  letter-spacing: 2px;
+  box-shadow: 0 6px 25px rgba(124, 58, 237, 0.4);
+  transition: var(--transition-normal);
+}
+
+.submit-btn :deep(.van-button--primary:active) {
+  transform: scale(0.97);
+  box-shadow: 0 3px 15px rgba(124, 58, 237, 0.3);
 }
 
 .tips {
-  margin-top: 40px;
+  margin-top: 36px;
   text-align: center;
 }
 
 .tips p {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
   font-size: 12px;
-  margin: 4px 0;
+  margin: 6px 0;
+  font-weight: 300;
+  letter-spacing: 0.5px;
 }
 </style>

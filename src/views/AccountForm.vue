@@ -7,80 +7,82 @@
     />
 
     <van-form @submit="handleSubmit" class="account-form">
-      <van-cell-group inset>
-        <van-field
-          v-model="form.name"
-          label="名称"
-          placeholder="例如：GitHub、Gmail"
-          :rules="[{ required: true, message: '请输入名称' }]"
-        />
+      <div class="form-card glass">
+        <van-cell-group inset>
+          <van-field
+            v-model="form.name"
+            label="名称"
+            placeholder="例如：GitHub、Gmail"
+            :rules="[{ required: true, message: '请输入名称' }]"
+          />
 
-        <van-field
-          v-model="form.category"
-          label="分类"
-          placeholder="选择分类"
-          readonly
-          is-link
-          @click="showCategoryPicker = true"
-        />
+          <van-field
+            v-model="form.category"
+            label="分类"
+            placeholder="选择分类"
+            readonly
+            is-link
+            @click="showCategoryPicker = true"
+          />
 
-        <van-field
-          v-model="form.username"
-          label="用户名"
-          placeholder="邮箱或用户名"
-          :rules="[{ required: true, message: '请输入用户名' }]"
-        />
+          <van-field
+            v-model="form.username"
+            label="用户名"
+            placeholder="邮箱或用户名"
+            :rules="[{ required: true, message: '请输入用户名' }]"
+          />
 
-        <van-field
-          v-model="form.password"
-          :type="showPassword ? 'text' : 'password'"
-          label="密码"
-          placeholder="输入密码"
-          :rules="[{ required: true, message: '请输入密码' }]"
-        >
-          <template #button>
-            <van-icon
-              :name="showPassword ? 'eye-o' : 'closed-eye'"
-              size="20"
-              @click="showPassword = !showPassword"
-            />
-            <van-icon
-              name="magic-stick"
-              size="20"
-              style="margin-left: 12px"
-              @click="showGenerator = true"
-            />
-          </template>
-        </van-field>
+          <van-field
+            v-model="form.password"
+            :type="showPassword ? 'text' : 'password'"
+            label="密码"
+            placeholder="输入密码"
+            :rules="[{ required: true, message: '请输入密码' }]"
+          >
+            <template #button>
+              <van-icon
+                :name="showPassword ? 'eye-o' : 'closed-eye'"
+                size="20"
+                @click="showPassword = !showPassword"
+              />
+              <van-icon
+                name="magic-stick"
+                size="20"
+                style="margin-left: 12px"
+                @click="showGenerator = true"
+              />
+            </template>
+          </van-field>
 
-        <div v-if="form.password" class="strength-bar">
-          <div class="strength-label">密码强度</div>
-          <div class="strength-track">
-            <div
-              class="strength-fill"
-              :style="{ width: strengthPercent + '%', background: passwordStrength.color }"
-            />
+          <div v-if="form.password" class="strength-bar">
+            <div class="strength-label">密码强度</div>
+            <div class="strength-track">
+              <div
+                class="strength-fill"
+                :style="{ width: strengthPercent + '%', background: passwordStrength.color }"
+              />
+            </div>
+            <div class="strength-text" :style="{ color: passwordStrength.color }">
+              {{ passwordStrength.text }}
+            </div>
           </div>
-          <div class="strength-text" :style="{ color: passwordStrength.color }">
-            {{ passwordStrength.text }}
-          </div>
-        </div>
 
-        <van-field
-          v-model="form.url"
-          label="网址"
-          placeholder="https://example.com"
-        />
+          <van-field
+            v-model="form.url"
+            label="网址"
+            placeholder="https://example.com"
+          />
 
-        <van-field
-          v-model="form.notes"
-          label="备注"
-          type="textarea"
-          placeholder="可选备注信息"
-          rows="2"
-          autosize
-        />
-      </van-cell-group>
+          <van-field
+            v-model="form.notes"
+            label="备注"
+            type="textarea"
+            placeholder="可选备注信息"
+            rows="2"
+            autosize
+          />
+        </van-cell-group>
+      </div>
 
       <div class="submit-btn">
         <van-button
@@ -326,73 +328,114 @@ async function confirmDelete() {
 <style scoped>
 .form-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #0a0a1a 0%, #1a1a3a 100%);
+  position: relative;
+  z-index: 1;
 }
 
+/* 导航栏 */
 .form-page :deep(.van-nav-bar) {
-  background: rgba(10, 10, 26, 0.9);
-  backdrop-filter: blur(10px);
+  background: rgba(9, 9, 11, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .form-page :deep(.van-nav-bar__title) {
-  color: #fff;
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .form-page :deep(.van-nav-bar__arrow) {
-  color: #fff;
+  color: var(--text-secondary);
 }
 
+/* 表单区域 */
 .account-form {
   padding-top: 12px;
 }
 
-.account-form :deep(.van-cell-group--inset) {
+.form-card {
   margin: 0 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(0, 212, 255, 0.15);
+  border-radius: var(--radius-lg);
+  padding: 8px 0;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
 }
 
-.account-form :deep(.van-cell) {
+/* 卡片顶部渐变装饰线 */
+.form-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  opacity: 0.5;
+}
+
+.form-card :deep(.van-cell-group--inset) {
+  margin: 0;
+  border-radius: 0;
   background: transparent;
-  color: #fff;
+  border: none;
 }
 
-.account-form :deep(.van-field__label) {
-  color: rgba(255, 255, 255, 0.8);
+.form-card :deep(.van-cell) {
+  background: transparent;
+  color: var(--text-primary);
+  padding: 14px 16px;
+}
+
+.form-card :deep(.van-cell::after) {
+  border-color: var(--border-subtle);
+}
+
+.form-card :deep(.van-field__label) {
+  color: var(--text-secondary);
   width: 60px;
+  font-weight: 500;
 }
 
-.account-form :deep(.van-field__control) {
-  color: #fff;
+.form-card :deep(.van-field__control) {
+  color: var(--text-primary);
 }
 
-.account-form :deep(.van-field__control::placeholder) {
-  color: rgba(255, 255, 255, 0.4);
+.form-card :deep(.van-field__control::placeholder) {
+  color: var(--text-muted);
 }
 
-.account-form :deep(.van-field__right-icon) {
-  color: rgba(255, 255, 255, 0.6);
+.form-card :deep(.van-field__right-icon),
+.form-card :deep(.van-field__button .van-icon) {
+  color: var(--text-secondary);
+  transition: var(--transition-fast);
 }
 
+.form-card :deep(.van-field__button .van-icon:active) {
+  color: var(--primary);
+}
+
+/* 密码强度条 */
 .strength-bar {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 10px 16px;
   background: rgba(255, 255, 255, 0.02);
 }
 
 .strength-label {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 14px;
+  color: var(--text-muted);
+  font-size: 13px;
   white-space: nowrap;
+  font-weight: 500;
 }
 
 .strength-track {
   flex: 1;
   height: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -400,49 +443,77 @@ async function confirmDelete() {
 .strength-fill {
   height: 100%;
   border-radius: 2px;
-  transition: all 0.3s;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 8px currentColor;
 }
 
 .strength-text {
   font-size: 12px;
   white-space: nowrap;
+  font-weight: 600;
 }
 
+/* 提交按钮 */
 .submit-btn {
   margin: 24px 12px 0;
 }
 
 .submit-btn :deep(.van-button--primary) {
-  background: linear-gradient(90deg, #00d4ff, #0099cc);
+  background: var(--gradient-primary);
   border: none;
-  height: 48px;
+  height: 50px;
   font-size: 16px;
-  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+  font-weight: 600;
+  letter-spacing: 2px;
+  box-shadow: 0 6px 25px rgba(124, 58, 237, 0.4);
+  transition: var(--transition-normal);
 }
 
+.submit-btn :deep(.van-button--primary:active) {
+  transform: scale(0.97);
+  box-shadow: 0 3px 15px rgba(124, 58, 237, 0.3);
+}
+
+/* 删除按钮 */
 .delete-btn {
   margin: 12px 12px 0;
 }
 
 .delete-btn :deep(.van-button--danger) {
-  border-color: rgba(255, 68, 68, 0.5);
-  color: #ff4444;
-  background: rgba(255, 68, 68, 0.1);
-  height: 48px;
+  border-color: rgba(248, 113, 113, 0.3);
+  color: var(--danger);
+  background: rgba(248, 113, 113, 0.06);
+  height: 50px;
+  font-weight: 500;
+  transition: var(--transition-fast);
 }
 
+.delete-btn :deep(.van-button--danger:active) {
+  background: rgba(248, 113, 113, 0.15);
+  transform: scale(0.97);
+}
+
+/* 密码生成器弹窗 */
 .generator-popup {
-  padding: 20px;
-  background: #1a1a3a;
+  padding: 24px 20px;
+  background: rgba(20, 20, 30, 0.98);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
 }
 
 .generator-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  color: #fff;
-  font-size: 16px;
+  margin-bottom: 24px;
+  color: var(--text-primary);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.generator-header .van-icon {
+  color: var(--text-muted);
 }
 
 .generator-options {
@@ -454,8 +525,9 @@ async function confirmDelete() {
   align-items: center;
   justify-content: space-between;
   padding: 12px 0;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
   font-size: 14px;
+  font-weight: 500;
 }
 
 .option-row .van-slider {
@@ -463,52 +535,83 @@ async function confirmDelete() {
   margin-left: 20px;
 }
 
+.option-row :deep(.van-slider__bar) {
+  background: var(--gradient-primary);
+}
+
+.option-row :deep(.van-slider__button) {
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
+}
+
 .option-row :deep(.van-checkbox__label) {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
+}
+
+.option-row :deep(.van-checkbox__icon--checked .van-icon) {
+  background-color: var(--primary);
+  border-color: var(--primary);
 }
 
 .generated-password :deep(.van-cell) {
-  background: rgba(0, 212, 255, 0.1);
-  border-radius: 8px;
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: var(--radius-sm);
 }
 
 .generated-password :deep(.van-field__control) {
-  color: #00d4ff;
-  font-family: monospace;
-  font-size: 16px;
+  color: var(--primary-light);
+  font-family: 'Inter', monospace;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.generated-password :deep(.van-field__label) {
+  color: var(--text-secondary);
+}
+
+.generated-password :deep(.van-icon) {
+  color: var(--primary);
 }
 
 .generator-actions {
-  margin-top: 16px;
+  margin-top: 20px;
 }
 
 .generator-actions :deep(.van-button--primary) {
-  background: linear-gradient(90deg, #00d4ff, #0099cc);
+  background: var(--gradient-primary);
   border: none;
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.35);
 }
 
+/* 弹窗全局样式 */
 :deep(.van-popup) {
-  background: #1a1a3a;
+  background: rgba(20, 20, 30, 0.98);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
 }
 
 :deep(.van-picker) {
-  background: #1a1a3a;
+  background: transparent;
 }
 
 :deep(.van-picker__toolbar) {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 :deep(.van-picker__cancel),
 :deep(.van-picker__confirm) {
-  color: #00d4ff;
+  color: var(--primary);
+  font-weight: 500;
 }
 
 :deep(.van-picker-column__item) {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
 }
 
 :deep(.van-picker-column__item--selected) {
-  color: #fff;
+  color: var(--text-primary);
+  font-weight: 600;
 }
 </style>
