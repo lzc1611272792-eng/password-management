@@ -3,7 +3,9 @@ import { ref, computed } from 'vue'
 
 export const useAccountsStore = defineStore('accounts', () => {
   const accounts = ref([])
-  const categories = ref(['社交', '邮箱', '银行', '开发', '购物', '游戏', '其他'])
+  const categories = ref([
+    '社交', '邮箱', '银行', '开发', '购物', '游戏', '其他'
+  ])
   const searchQuery = ref('')
   const selectedCategory = ref('')
 
@@ -27,10 +29,42 @@ export const useAccountsStore = defineStore('accounts', () => {
   })
 
   function setAccounts(data) {
-    accounts.value = data.accounts || []
     if (data.categories) {
-      categories.value = data.categories
+      if (data.categories.length > 0 && typeof data.categories[0] === 'string') {
+        categories.value = data.categories
+      } else {
+        categories.value = data.categories.map(cat => cat.name)
+      }
     }
+
+    const defaultIconMap = {
+      '社交': '👥', '邮箱': '📧', '银行': '🏦',
+      '开发': '💻', '购物': '🛒', '游戏': '🎮', '其他': '📁'
+    }
+
+    accounts.value = (data.accounts || []).map(acc => {
+      if (!acc.icon) {
+        if (data.categories && data.categories.length > 0 && typeof data.categories[0] === 'object') {
+          const oldCat = data.categories.find(c => c.name === acc.category)
+          if (oldCat && oldCat.icon) {
+            const vantToEmojiMap = {
+              'chat-o': '👥', 'envelop-o': '📧', 'gold-coin-o': '🏦',
+              'desktop-o': '💻', 'cart-o': '🛒', 'play-circle-o': '🎮',
+              'apps-o': '📁', 'folder-o': '📂', 'apple': '🍎',
+              'video-o': '🎥', 'music-o': '🎵', 'photograph': '📷',
+              'idcard': '💳', 'smile-o': '😊', 'shop-o': '🏪',
+              'bookmark-o': '🔖'
+            }
+            acc.icon = vantToEmojiMap[oldCat.icon] || oldCat.icon || '📂'
+          } else {
+            acc.icon = defaultIconMap[acc.category] || '📂'
+          }
+        } else {
+          acc.icon = defaultIconMap[acc.category] || '📂'
+        }
+      }
+      return acc
+    })
   }
 
   function addAccount(account) {
@@ -63,6 +97,23 @@ export const useAccountsStore = defineStore('accounts', () => {
   function addCategory(name) {
     if (name && !categories.value.includes(name)) {
       categories.value.push(name)
+      return true
+    }
+    return false
+  }
+
+  function updateCategory(oldName, newName) {
+    if (oldName === '其他') return false
+
+    const index = categories.value.indexOf(oldName)
+    if (index !== -1) {
+      categories.value[index] = newName
+
+      accounts.value.forEach(acc => {
+        if (acc.category === oldName) {
+          acc.category = newName
+        }
+      })
       return true
     }
     return false
@@ -102,6 +153,7 @@ export const useAccountsStore = defineStore('accounts', () => {
     setSearchQuery,
     setSelectedCategory,
     addCategory,
+    updateCategory,
     deleteCategory,
     exportData
   }

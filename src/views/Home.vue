@@ -38,7 +38,10 @@
         >
           <div class="card-content" @click="goEdit(account.id)">
             <div class="card-header">
-              <div class="card-icon">{{ getCategoryIcon(account.category) }}</div>
+              <div class="card-icon" v-if="(account.icon || '📂').startsWith('si:')">
+                <img :src="getBrandIconUrl(account.icon || '📂')" class="brand-icon" />
+              </div>
+              <div class="card-icon" v-else>{{ account.icon || '📂' }}</div>
               <div class="card-info">
                 <div class="card-name">{{ account.name }}</div>
                 <div class="card-username">{{ maskUsername(account.username) }}</div>
@@ -79,7 +82,7 @@
       </div>
     </div>
 
-    <div class="custom-fab" @click="goAdd">
+    <div class="custom-fab" @click="goAddConfigured">
       <span class="fab-plus">+</span>
     </div>
 
@@ -99,33 +102,44 @@
       </div>
 
       <div class="manager-content">
-        <div class="add-category">
-          <van-field
-            v-model="newCategoryName"
-            placeholder="新分类名称"
-            autofocus
-            @keyup.enter="handleAddCategory"
-          >
-            <template #button>
-              <van-button size="small" type="primary" @click="handleAddCategory">添加</van-button>
-            </template>
-          </van-field>
-        </div>
-
         <div class="category-list">
-          <div v-for="cat in accountsStore.categories" :key="cat" class="category-item">
-            <span class="cat-name">{{ cat }}</span>
+          <!-- 列表项 -->
+          <div v-for="cat in accountsStore.categories" :key="cat" class="category-item" @click="openEditCategory(cat)">
+            <div class="cat-left">
+              <span class="cat-name">{{ cat }}</span>
+            </div>
             <van-icon
               v-if="cat !== '其他'"
               name="delete-o"
               color="#f87171"
               size="18"
-              @click="handleDeleteCategory(cat)"
+              @click.stop="handleDeleteCategory(cat)"
             />
           </div>
         </div>
+
+        <div class="add-cat-btn-wrap">
+          <van-button block round type="primary" @click="openAddCategory">添加新分类</van-button>
+        </div>
       </div>
     </van-popup>
+
+    <!-- 分类编辑/添加 对话框 -->
+    <van-dialog
+      v-model:show="showCategoryDialog"
+      :title="editingCategory ? '编辑分类' : '添加分类'"
+      show-cancel-button
+      @confirm="submitCategory"
+      class="custom-dialog"
+    >
+      <div class="cat-dialog-content">
+        <van-field
+          v-model="catForm.name"
+          placeholder="分类名称"
+          class="dialog-field"
+        />
+      </div>
+    </van-dialog>
   </div>
 </template>
 
@@ -146,7 +160,12 @@ const searchQuery = ref('')
 const activeCategory = ref('')
 const showSettings = ref(false)
 const showCategoryManager = ref(false)
-const newCategoryName = ref('')
+const showCategoryDialog = ref(false)
+const editingCategory = ref(null)
+
+const catForm = ref({
+  name: ''
+})
 
 const settingsActions = [
   { name: '管理分类类型', value: 'manage_categories' },
@@ -160,17 +179,9 @@ onMounted(() => {
   }
 })
 
-function getCategoryIcon(category) {
-  const icons = {
-    '社交': '👥',
-    '邮箱': '📧',
-    '银行': '🏦',
-    '开发': '💻',
-    '购物': '🛒',
-    '游戏': '🎮',
-    '其他': '📁'
-  }
-  return icons[category] || '📁'
+function getBrandIconUrl(iconValue) {
+  const brandId = iconValue.replace('si:', '')
+  return `https://api.iconify.design/simple-icons/${brandId}.svg?color=white`
 }
 
 function maskUsername(username) {
@@ -190,8 +201,11 @@ function handleCategoryChange(name) {
   accountsStore.setSelectedCategory(name)
 }
 
-function goAdd() {
-  router.push('/account/add')
+function goAddConfigured() {
+  const defaultCat = activeCategory.value === '' 
+    ? (accountsStore.categories.length > 0 ? accountsStore.categories[0].name : '')
+    : activeCategory.value
+  router.push({ path: '/account/add', query: { defaultCategory: defaultCat } })
 }
 
 function goEdit(id) {
@@ -252,15 +266,40 @@ function onSettingSelect(action) {
   }
 }
 
-async function handleAddCategory() {
-  const name = newCategoryName.value.trim()
+function openAddCategory() {
+  editingCategory.value = null
+  catForm.value = { name: '' }
+  showCategoryDialog.value = true
+}
+
+function openEditCategory(catName) {
+  if (catName === '其他') {
+    showToast('默认分类不可编辑')
+    return
+  }
+  editingCategory.value = catName
+  catForm.value = { name: catName }
+  showCategoryDialog.value = true
+}
+
+async function submitCategory() {
+  const name = catForm.value.name.trim()
   if (!name) return
-  if (accountsStore.addCategory(name)) {
-    newCategoryName.value = ''
-    await saveData()
-    showToast('添加成功')
+
+  if (editingCategory.value) {
+    if (accountsStore.updateCategory(editingCategory.value, name)) {
+      await saveData()
+      showToast('修改成功')
+    } else {
+      showToast('修改失败，可能名称已存在')
+    }
   } else {
-    showToast('分类已存在')
+    if (accountsStore.addCategory(name)) {
+      await saveData()
+      showToast('添加成功')
+    } else {
+      showToast('分类已存在')
+    }
   }
 }
 
@@ -344,6 +383,100 @@ function exportBackup() {
 .van-search :deep(.van-search__content:focus-within) {
   border-color: var(--border-glow);
   box-shadow: var(--shadow-glow-sm);
+}
+
+/* 分类管理弹窗内容 */
+.manager-popup {
+  background: var(--bg-base);
+  height: max-content;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.manager-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.manager-content {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  transition: var(--transition-normal);
+  cursor: pointer;
+}
+
+.category-item:active {
+  transform: scale(0.98);
+  background: var(--bg-card-hover);
+}
+
+.cat-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cat-icon-display {
+  color: var(--primary);
+  opacity: 0.8;
+}
+
+.cat-name {
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.add-cat-btn-wrap {
+  margin-top: 24px;
+  padding-bottom: 12px;
+}
+
+.brand-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  filter: brightness(1.1);
+}
+.custom-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.custom-icon-input {
+  flex: 1;
+  background: var(--glass-bg);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 20px;
+}
+
+.custom-icon-input :deep(.van-field__control) {
+  text-align: center;
+  font-size: 20px;
 }
 
 .van-search :deep(.van-field__control) {

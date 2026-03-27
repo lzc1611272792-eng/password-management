@@ -9,6 +9,13 @@
     <van-form @submit="handleSubmit" class="account-form">
       <div class="form-card glass">
         <van-cell-group inset>
+          <div class="account-icon-display" @click="showIconPicker = true">
+            <span v-if="form.icon.startsWith('si:')" class="icon-avatar">
+               <img :src="getBrandIconUrl(form.icon)" class="brand-icon-avatar" />
+            </span>
+            <span v-else class="icon-avatar">{{ form.icon }}</span>
+            <div class="icon-edit-tag">点击更换</div>
+          </div>
           <van-field
             v-model="form.name"
             label="名称"
@@ -131,15 +138,68 @@
       @confirm="handleAddCategory"
       class="custom-dialog"
     >
-      <div style="padding: 24px 20px;">
+      <div class="cat-dialog-content">
         <van-field
-          v-model="newCategoryName"
+          v-model="catForm.name"
           placeholder="输入新分类名称"
-          autofocus
           class="dialog-field"
+          autofocus
         />
       </div>
     </van-dialog>
+
+    <van-popup v-model:show="showIconPicker" position="bottom" round class="icon-picker-popup">
+      <div class="icon-picker-header">
+        <span>选择账号图标</span>
+        <van-icon name="cross" size="20" @click="showIconPicker = false" />
+      </div>
+      <div class="icon-selector-wrap">
+        <div class="icon-tabs">
+          <span
+            class="icon-tab" :class="{ active: iconTab === 'brand' }"
+            @click="iconTab = 'brand'"
+          >品牌 Logo</span>
+          <span
+            class="icon-tab" :class="{ active: iconTab === 'emoji' }"
+            @click="iconTab = 'emoji'"
+          >Emoji 图标</span>
+        </div>
+
+        <div v-if="iconTab === 'brand'" class="icon-grid brand-grid">
+          <div
+            v-for="brand in brandIcons"
+            :key="brand.id"
+            class="icon-cell brand-cell"
+            :class="{ 'active': form.icon === 'si:' + brand.id }"
+            @click="form.icon = 'si:' + brand.id"
+            :title="brand.label"
+          >
+            <img :src="'https://api.iconify.design/simple-icons/' + brand.id + '.svg?color=white'" class="brand-icon-picker" />
+          </div>
+        </div>
+
+        <div v-if="iconTab === 'emoji'" class="icon-grid">
+          <div
+            v-for="emoji in presetIcons"
+            :key="emoji"
+            class="icon-cell"
+            :class="{ 'active': form.icon === emoji }"
+            @click="form.icon = emoji"
+          >
+            {{ emoji }}
+          </div>
+        </div>
+
+        <div class="custom-icon-row">
+          <span class="custom-label">自定义：</span>
+          <van-field
+            v-model="form.icon"
+            placeholder="输入 Emoji 或 si:品牌名"
+            class="custom-icon-input"
+          />
+        </div>
+      </div>
+    </van-popup>
 
     <van-popup v-model:show="showGenerator" position="bottom" round>
       <div class="generator-popup">
@@ -206,12 +266,15 @@ const accountsStore = useAccountsStore()
 const isEdit = computed(() => route.name === 'EditAccount')
 const accountId = computed(() => route.params.id)
 
+const defaultCategoryParam = computed(() => route.query.defaultCategory)
+
 const categoryColumns = computed(() =>
   accountsStore.categories.map(cat => ({ text: cat, value: cat }))
 )
 
 const form = ref({
   name: '',
+  icon: '📂',
   category: '其他',
   username: '',
   password: '',
@@ -221,10 +284,62 @@ const form = ref({
 
 const showPassword = ref(false)
 const showCategoryPicker = ref(false)
+const showIconPicker = ref(false)
 const showGenerator = ref(false)
 const showAddCategory = ref(false)
-const newCategoryName = ref('')
 const saving = ref(false)
+
+const catForm = ref({
+  name: ''
+})
+
+const iconTab = ref('brand')
+
+const brandIcons = [
+  { id: 'apple', label: 'Apple' },
+  { id: 'xiaomi', label: '小米' },
+  { id: 'google', label: 'Google' },
+  { id: 'microsoft', label: 'Microsoft' },
+  { id: 'github', label: 'GitHub' },
+  { id: 'steam', label: 'Steam' },
+  { id: 'wechat', label: '微信' },
+  { id: 'tencentqq', label: '腾讯' },
+  { id: 'alipay', label: '支付宝' },
+  { id: 'bilibili', label: 'Bilibili' },
+  { id: 'x', label: 'X (Twitter)' },
+  { id: 'meta', label: 'Meta' },
+  { id: 'amazon', label: 'Amazon' },
+  { id: 'netflix', label: 'Netflix' },
+  { id: 'spotify', label: 'Spotify' },
+  { id: 'discord', label: 'Discord' },
+  { id: 'telegram', label: 'Telegram' },
+  { id: 'instagram', label: 'Instagram' },
+  { id: 'youtube', label: 'YouTube' },
+  { id: 'tiktok', label: 'TikTok' },
+  { id: 'reddit', label: 'Reddit' },
+  { id: 'linkedin', label: 'LinkedIn' },
+  { id: 'paypal', label: 'PayPal' },
+  { id: 'samsung', label: '三星' },
+  { id: 'huawei', label: '华为' },
+  { id: 'sony', label: 'Sony' },
+  { id: 'nvidia', label: 'Nvidia' },
+  { id: 'adobe', label: 'Adobe' },
+  { id: 'gitlab', label: 'GitLab' },
+  { id: 'docker', label: 'Docker' },
+  { id: 'cloudflare', label: 'Cloudflare' },
+  { id: 'epicgames', label: 'Epic Games' },
+]
+
+const presetIcons = [
+  '👥', '📧', '🏦', '💻', '🛒', '🎮', '📁', '📂',
+  '📱', '🎵', '📷', '🎥', '🚀', '🔒', '❤️', '⭐',
+  '🏠', '📚', '✈️', '🌍', '💰', '🎯', '💡', '💎',
+  '🌟', '🌈', '🔥', '⚡', '🌿', '🎀', '🏆', '🎁',
+  '🎓', '💼', '🛠️', '⚙️', '📦', '📊', '📈', '📝',
+  '📌', '🔍', '🎨', '🎬', '🎮', '🏀', '⚽', '🚗',
+  '🍔', '☕', '🍻', '🎂', '🐶', '🐱', '🌸', '🎶',
+  '🌙', '☀️', '🌊', '❄️', '🍂', '🌋', '🙌', '😎'
+]
 
 const generatorLength = ref(16)
 const generatorOpts = ref({
@@ -256,6 +371,12 @@ onMounted(() => {
       showToast('账号不存在')
       router.back()
     }
+  } else {
+    if (defaultCategoryParam.value) {
+      form.value.category = defaultCategoryParam.value
+    } else if (accountsStore.categories.length > 0) {
+      form.value.category = accountsStore.categories[0].name
+    }
   }
 
   regenerate()
@@ -283,12 +404,17 @@ function onCategoryConfirm({ selectedOptions }) {
   showCategoryPicker.value = false
 }
 
+function getBrandIconUrl(iconValue) {
+  const brandId = iconValue.replace('si:', '')
+  return `https://api.iconify.design/simple-icons/${brandId}.svg?color=white`
+}
+
 async function handleAddCategory() {
-  const name = newCategoryName.value.trim()
+  const name = catForm.value.name.trim()
   if (!name) return
   if (accountsStore.addCategory(name)) {
     form.value.category = name
-    newCategoryName.value = ''
+    catForm.value = { name: '' }
     showToast('分类已添加并选中')
     // 异步保存到 Gist
     try {
@@ -397,6 +523,107 @@ async function confirmDelete() {
 .account-form {
   padding-top: 12px;
 }
+
+/* 顶部图标展示区 */
+.account-icon-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.account-icon-display:active {
+  transform: scale(0.95);
+}
+
+.icon-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-glow-sm);
+  margin-bottom: 8px;
+}
+
+.brand-icon-avatar {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.icon-edit-tag {
+  font-size: 12px;
+  color: var(--primary);
+  background: rgba(167, 139, 250, 0.15);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* 独立图标选择弹窗 */
+.icon-picker-popup {
+  padding: 16px 20px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.icon-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.icon-selector-wrap {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* 图标网格复用 */
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.icon-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.icon-cell.active {
+  background: rgba(167, 139, 250, 0.15);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.3);
+}
+
+.icon-grid::-webkit-scrollbar { width: 4px; }
+.icon-grid::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
 
 .form-card {
   margin: 0 12px;
@@ -684,5 +911,84 @@ async function confirmDelete() {
 :deep(.van-picker-column__item--selected) {
   color: var(--text-primary);
   font-weight: 600;
+}
+
+.icon-cell {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.custom-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.custom-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.custom-icon-input {
+  flex: 1;
+  background: var(--glass-bg);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 20px;
+}
+
+.custom-icon-input :deep(.van-field__control) {
+  text-align: center;
+  font-size: 20px;
+}
+
+/* 品牌图标相关 */
+.brand-grid {
+  grid-template-columns: repeat(4, 1fr);
+  max-height: 240px;
+}
+
+.brand-cell {
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 4px;
+}
+
+.brand-icon-picker {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+/* 标签页切换 */
+.icon-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+}
+
+.icon-tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  border-radius: calc(var(--radius-sm) - 2px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-tab.active {
+  background: var(--gradient-primary);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
 }
 </style>
