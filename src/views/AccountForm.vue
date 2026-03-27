@@ -109,7 +109,7 @@
 
     <van-popup v-model:show="showCategoryPicker" position="bottom" round>
       <van-picker
-        :columns="accountsStore.categories"
+        :columns="categoryColumns"
         @confirm="onCategoryConfirm"
         @cancel="showCategoryPicker = false"
         :confirm-button-text="'确定'"
@@ -182,6 +182,10 @@ const accountsStore = useAccountsStore()
 const isEdit = computed(() => route.name === 'EditAccount')
 const accountId = computed(() => route.params.id)
 
+const categoryColumns = computed(() =>
+  accountsStore.categories.map(cat => ({ text: cat, value: cat }))
+)
+
 const form = ref({
   name: '',
   category: '其他',
@@ -249,7 +253,7 @@ function useGeneratedPassword() {
 }
 
 function onCategoryConfirm({ selectedOptions }) {
-  form.value.category = selectedOptions[0]
+  form.value.category = selectedOptions[0].value
   showCategoryPicker.value = false
 }
 
