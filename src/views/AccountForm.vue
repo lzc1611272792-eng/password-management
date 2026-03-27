@@ -23,7 +23,11 @@
             readonly
             is-link
             @click="showCategoryPicker = true"
-          />
+          >
+            <template #right-icon>
+              <van-icon name="plus" @click.stop="showAddCategory = true" />
+            </template>
+          </van-field>
 
           <van-field
             v-model="form.username"
@@ -119,6 +123,24 @@
       />
     </van-popup>
 
+    <!-- 快捷添加分类 -->
+    <van-dialog
+      v-model:show="showAddCategory"
+      title="快速添加分类"
+      show-cancel-button
+      @confirm="handleAddCategory"
+      class="custom-dialog"
+    >
+      <div style="padding: 24px 20px;">
+        <van-field
+          v-model="newCategoryName"
+          placeholder="输入新分类名称"
+          autofocus
+          class="dialog-field"
+        />
+      </div>
+    </van-dialog>
+
     <van-popup v-model:show="showGenerator" position="bottom" round>
       <div class="generator-popup">
         <div class="generator-header">
@@ -200,6 +222,8 @@ const form = ref({
 const showPassword = ref(false)
 const showCategoryPicker = ref(false)
 const showGenerator = ref(false)
+const showAddCategory = ref(false)
+const newCategoryName = ref('')
 const saving = ref(false)
 
 const generatorLength = ref(16)
@@ -257,6 +281,26 @@ function useGeneratedPassword() {
 function onCategoryConfirm({ selectedOptions }) {
   form.value.category = selectedOptions[0].value
   showCategoryPicker.value = false
+}
+
+async function handleAddCategory() {
+  const name = newCategoryName.value.trim()
+  if (!name) return
+  if (accountsStore.addCategory(name)) {
+    form.value.category = name
+    newCategoryName.value = ''
+    showToast('分类已添加并选中')
+    // 异步保存到 Gist
+    try {
+      const data = accountsStore.exportData()
+      const encrypted = await encrypt(data, authStore.masterPassword)
+      await updateGist(authStore.token, authStore.gistId, encrypted)
+    } catch {
+      // 失败也不影响当前操作，下次保存数据时会一并保存
+    }
+  } else {
+    showToast('分类已存在')
+  }
 }
 
 async function handleSubmit() {
@@ -585,11 +629,33 @@ async function confirmDelete() {
   box-shadow: 0 4px 20px rgba(124, 58, 237, 0.35);
 }
 
-/* 弹窗全局样式 */
+/* 弹窗及选择器优化 */
 :deep(.van-popup) {
   background: rgba(20, 20, 30, 0.98);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
+}
+
+:deep(.van-dialog) {
+  background: rgba(20, 20, 30, 0.98);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  color: #fff;
+}
+
+:deep(.van-dialog__header) {
+  color: #fff;
+  padding-top: 24px;
+}
+
+:deep(.van-dialog__content) {
+  background: transparent;
+}
+
+:deep(.dialog-field) {
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
 }
 
 :deep(.van-picker) {
@@ -598,6 +664,11 @@ async function confirmDelete() {
 
 :deep(.van-picker__toolbar) {
   border-bottom: 1px solid var(--border-subtle);
+}
+
+:deep(.van-picker__mask) {
+  background-image: linear-gradient(180deg, rgba(20, 20, 30, 0.95), transparent), 
+                    linear-gradient(0deg, rgba(20, 20, 30, 0.95), transparent) !important;
 }
 
 :deep(.van-picker__cancel),

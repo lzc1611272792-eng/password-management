@@ -60,6 +60,26 @@ export const useAccountsStore = defineStore('accounts', () => {
     selectedCategory.value = category
   }
 
+  function addCategory(name) {
+    if (name && !categories.value.includes(name)) {
+      categories.value.push(name)
+      return true
+    }
+    return false
+  }
+
+  function deleteCategory(name) {
+    if (name === '其他') return false
+    categories.value = categories.value.filter(c => c !== name)
+    // 更新属于该分类的账号到“其他”
+    accounts.value.forEach(acc => {
+      if (acc.category === name) {
+        acc.category = '其他'
+      }
+    })
+    return true
+  }
+
   function exportData() {
     return {
       version: 1,
@@ -81,6 +101,8 @@ export const useAccountsStore = defineStore('accounts', () => {
     getAccountById,
     setSearchQuery,
     setSelectedCategory,
+    addCategory,
+    deleteCategory,
     exportData
   }
 })

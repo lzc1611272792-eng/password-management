@@ -96,6 +96,42 @@
       @select="onSettingSelect"
       cancel-text="取消"
     />
+
+    <!-- 分类管理弹窗 -->
+    <van-popup v-model:show="showCategoryManager" position="bottom" round class="manager-popup">
+      <div class="manager-header">
+        <span>管理分类</span>
+        <van-icon name="cross" size="20" @click="showCategoryManager = false" />
+      </div>
+
+      <div class="manager-content">
+        <div class="add-category">
+          <van-field
+            v-model="newCategoryName"
+            placeholder="新分类名称"
+            autofocus
+            @keyup.enter="handleAddCategory"
+          >
+            <template #button>
+              <van-button size="small" type="primary" @click="handleAddCategory">添加</van-button>
+            </template>
+          </van-field>
+        </div>
+
+        <div class="category-list">
+          <div v-for="cat in accountsStore.categories" :key="cat" class="category-item">
+            <span class="cat-name">{{ cat }}</span>
+            <van-icon
+              v-if="cat !== '其他'"
+              name="delete-o"
+              color="#f87171"
+              size="18"
+              @click="handleDeleteCategory(cat)"
+            />
+          </div>
+        </div>
+      </div>
+    </van-popup>
   </div>
 </template>
 
@@ -115,8 +151,11 @@ const accountsStore = useAccountsStore()
 const searchQuery = ref('')
 const activeCategory = ref('')
 const showSettings = ref(false)
+const showCategoryManager = ref(false)
+const newCategoryName = ref('')
 
 const settingsActions = [
+  { name: '管理分类类型', value: 'manage_categories' },
   { name: '导出备份文件', value: 'export' },
   { name: '退出登录', value: 'logout', color: '#f87171' }
 ]
@@ -209,11 +248,43 @@ async function saveData() {
 }
 
 function onSettingSelect(action) {
-  if (action.value === 'export') {
+  if (action.value === 'manage_categories') {
+    showCategoryManager.value = true
+  } else if (action.value === 'export') {
     exportBackup()
   } else if (action.value === 'logout') {
     authStore.logout()
     router.push('/')
+  }
+}
+
+async function handleAddCategory() {
+  const name = newCategoryName.value.trim()
+  if (!name) return
+  if (accountsStore.addCategory(name)) {
+    newCategoryName.value = ''
+    await saveData()
+    showToast('添加成功')
+  } else {
+    showToast('分类已存在')
+  }
+}
+
+async function handleDeleteCategory(name) {
+  try {
+    await showConfirmDialog({
+      title: '删除分类',
+      message: `确定要删除分类 "${name}" 吗？该分类下的账号将归入 "其他"。`,
+      confirmButtonText: '删除',
+      cancelButtonText: '取消'
+    })
+
+    if (accountsStore.deleteCategory(name)) {
+      await saveData()
+      showToast('删除成功')
+    }
+  } catch {
+    //
   }
 }
 
@@ -472,6 +543,65 @@ function exportBackup() {
 
 :deep(.van-action-sheet__gap) {
   background: var(--border-subtle);
+}
+
+/* 分类管理弹窗 */
+.manager-popup {
+  padding: 24px 20px;
+  background: rgba(20, 20, 30, 0.98);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+}
+
+.manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  color: var(--text-primary);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.manager-header .van-icon {
+  color: var(--text-muted);
+}
+
+.add-category {
+  margin-bottom: 24px;
+}
+
+.add-category :deep(.van-cell) {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.add-category :deep(.van-field__control) {
+  color: var(--text-primary);
+}
+
+.category-list {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  margin-bottom: 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.cat-name {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 /* 空状态 */
